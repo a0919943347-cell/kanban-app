@@ -1,16 +1,193 @@
-<!doctype html>
-<html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>個人作品集 & 簡介 | Personal Portfolio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>簡約暖色任務看板 | Minimalist Kanban</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- 引入 Google Fonts 提升無襯線與字體質感 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- 頂部資訊看板 -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="date-badge" id="currentDate">🗓️ 載入日期中...</div>
+        <div class="progress-summary">
+          <span class="progress-text" id="progressText">0 / 0 完成 (0%)</span>
+          <div class="progress-track">
+            <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+      <h1 class="app-title">我的任務看板</h1>
+      <p class="app-subtitle">拖曳卡片推進進度，專注於當下的每一步</p>
+    </header>
+
+    <!-- 任務新增卡片 -->
+    <section class="task-form-card">
+      <form id="taskForm">
+        <div class="input-row">
+          <input 
+            type="text" 
+            id="taskInput" 
+            class="task-input" 
+            placeholder="新增待辦任務... (預設加入 To-do，按 Enter 送出)" 
+            autocomplete="off"
+            maxlength="100"
+            required
+          >
+          <button type="submit" class="btn-add" title="新增任務">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>新增任務</span>
+          </button>
+        </div>
+
+        <!-- 任務選項 (分類與優先度) 及篩選 -->
+        <div class="form-footer-row">
+          <div class="selectors-wrap">
+            <div class="category-selector">
+              <span class="selector-title">類別：</span>
+              <label class="category-radio work">
+                <input type="radio" name="taskCategory" value="work" checked>
+                <span class="radio-pill">
+                  <span class="pill-dot"></span>
+                  工作
+                </span>
+              </label>
+              <label class="category-radio life">
+                <input type="radio" name="taskCategory" value="life">
+                <span class="radio-pill">
+                  <span class="pill-dot"></span>
+                  生活
+                </span>
+              </label>
+            </div>
+
+            <div class="priority-selector">
+              <span class="selector-title">優先度：</span>
+              <label class="priority-radio priority-high">
+                <input type="radio" name="taskPriority" value="high">
+                <span class="radio-pill priority-pill">
+                  <span class="priority-dot dot-high"></span>
+                  High
+                </span>
+              </label>
+              <label class="priority-radio priority-medium">
+                <input type="radio" name="taskPriority" value="medium" checked>
+                <span class="radio-pill priority-pill">
+                  <span class="priority-dot dot-medium"></span>
+                  Medium
+                </span>
+              </label>
+              <label class="priority-radio priority-low">
+                <input type="radio" name="taskPriority" value="low">
+                <span class="radio-pill priority-pill">
+                  <span class="priority-dot dot-low"></span>
+                  Low
+                </span>
+              </label>
+            </div>
+
+            <div class="due-date-selector">
+              <label for="taskDueDate" class="selector-title">截止日期：</label>
+              <input 
+                type="date" 
+                id="taskDueDate" 
+                class="due-date-input" 
+                title="截止日期 (選填)"
+              >
+            </div>
+          </div>
+
+          <!-- 分類檢視篩選 -->
+          <div class="filter-group">
+            <span class="selector-title">篩選：</span>
+            <div class="filter-tabs">
+              <button type="button" class="filter-tab active" data-filter="all">
+                全部 <span class="badge" id="countAll">0</span>
+              </button>
+              <button type="button" class="filter-tab" data-filter="work">
+                工作 <span class="badge" id="countWork">0</span>
+              </button>
+              <button type="button" class="filter-tab" data-filter="life">
+                生活 <span class="badge" id="countLife">0</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- 看板主體：三個欄位 (To-do, Process, Done) -->
+    <main class="kanban-board">
+      <!-- 欄位 1: To-do -->
+      <section class="kanban-column column-todo" data-status="todo">
+        <header class="column-header">
+          <div class="column-title-wrap">
+            <span class="column-indicator todo-dot"></span>
+            <h2 class="column-title">To-do</h2>
+            <span class="column-subtitle">待辦</span>
+          </div>
+          <span class="column-count" id="countColTodo">0</span>
+        </header>
+
+        <div class="column-tasks" id="tasksTodo" data-dropzone="todo">
+          <!-- 任務卡片動態渲染 -->
+        </div>
+      </section>
+
+      <!-- 欄位 2: Process -->
+      <section class="kanban-column column-process" data-status="process">
+        <header class="column-header">
+          <div class="column-title-wrap">
+            <span class="column-indicator process-dot"></span>
+            <h2 class="column-title">Process</h2>
+            <span class="column-subtitle">進行中</span>
+          </div>
+          <span class="column-count" id="countColProcess">0</span>
+        </header>
+
+        <div class="column-tasks" id="tasksProcess" data-dropzone="process">
+          <!-- 任務卡片動態渲染 -->
+        </div>
+      </section>
+
+      <!-- 欄位 3: Done -->
+      <section class="kanban-column column-done" data-status="done">
+        <header class="column-header">
+          <div class="column-title-wrap">
+            <span class="column-indicator done-dot"></span>
+            <h2 class="column-title">Done</h2>
+            <span class="column-subtitle">已完成</span>
+          </div>
+          <div class="column-header-actions">
+            <span class="column-count" id="countColDone">0</span>
+            <button id="clearDoneBtn" class="btn-clear-done" title="清除已完成任務">
+              清空
+            </button>
+          </div>
+        </header>
+
+        <div class="column-tasks" id="tasksDone" data-dropzone="done">
+          <!-- 任務卡片動態渲染 -->
+        </div>
+      </section>
+    </main>
+
+    <!-- 頁尾與拖曳提示 -->
+    <footer class="app-footer">
+      <p class="drag-hint">💡 提示：可按住任一任務卡片，直接拖曳跨欄位放置（To-do ⇄ Process ⇄ Done）</p>
+      <p class="storage-hint">資料會自動儲存於您的本機瀏覽器 (localStorage)</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
 </html>

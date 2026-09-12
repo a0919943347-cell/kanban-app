@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAI 智馭科技 - 領先的企業級人工智慧解決方案</title>
+    <style>
+        :root {
+            --bg-main: #0a0f1d;
+            --bg-card: rgba(255, 255, 255, 0.04);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --primary: #4f46e5;
+            --primary-glow: #6366f1;
+            --secondary: #06b6d4;
+            --accent: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 60%, rgba(6, 182, 212, 0.15) 0%, transparent 40%);
+            min-height: 100vh;
+        }
+
+        /* 導覽列 */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(10, 15, 29, 0.75);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.65rem 1.4rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.92;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            backdrop-filter: blur(8px);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* 主視覺 Hero */
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 5.5rem 1.5rem 4rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            color: #a5b4fc;
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.75rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.3rem, 5.5vw, 3.8rem);
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+            max-width: 860px;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 50%, #e879f9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: clamp(1.05rem, 2vw, 1.25rem);
+            color: var(--text-muted);
+            max-width: 680px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 3.5rem;
+        }
+
+        /* 數據統計欄 */
+        .stats-bar {
+            max-width: 1050px;
+            margin: 0 auto 5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 0 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 1.75rem 1.25rem;
+            border-radius: 16px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-num {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 0.3rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* 互動式體驗區 Demo */
+        .demo-section {
+            max-width: 960px;
+            margin: 0 auto 6rem;
+            padding: 0 1.5rem;
+        }
+
+        .terminal-container {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(99, 102, 241, 0.15);
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: #1e293b;
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #f59e0b; }
+        .dot-green { background: #10b981; }
+
+        .terminal-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .terminal-body {
+            padding: 1.75rem;
+        }
+
+        .preset-prompts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .prompt-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: #cbd5e1;
+            padding: 0.4rem 0.9rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .prompt-chip:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--primary-glow);
+            color: #ffffff;
+        }
+
+        .chat-display {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 12px;
+            padding: 1.25rem;
+            min-height: 140px;
+            font-family: monospace;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+            color: #38bdf8;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* 核心解決方案 Feature Grid */
+        .features {
+            max-width: 1200px;
+            margin: 0 auto 6rem;
+            padding: 0 1.5rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 2.25rem;
+            border-radius: 20px;
+            transition: transform 0.3s, border-color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.4);
+            background: var(--bg-card-hover);
+        }
+
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--secondary);
+            font-size: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* 呼籲行動 CTA */
+        .cta-section {
+            max-width: 1050px;
+            margin: 0 auto 6rem;
+            padding: 3.5rem 2rem;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.25) 0%, rgba(6, 182, 212, 0.15) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            border-radius: 24px;
+            text-align: center;
+            backdrop-filter: blur(15px);
+        }
+
+        .cta-section h2 {
+            font-size: 2.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            color: #cbd5e1;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* 頁尾 */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 1.5rem 2rem;
+            background: #070a14;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            .footer-container {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 導覽列 -->
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <div class="logo-icon">✦</div>
+                NexusAI 智馭科技
+            </a>
+            <ul class="nav-links">
+                <li><a href="#solutions">核心技術</a></li>
+                <li><a href="#demo">即時演示</a></li>
+                <li><a href="#stats">成功數據</a></li>
+                <li><a href="#contact">關於我們</a></li>
+            </ul>
+            <a href="#contact" class="btn btn-primary">立即諮詢</a>
+        </div>
+    </header>
+
+    <!-- 主視覺區 Hero -->
+    <main>
+        <section class="hero">
+            <div class="badge">
+                <span>✨</span> 新一代企業級自主智能體 (AI Agents) 引擎
+            </div>
+            <h1>
+                以人工智慧重構企業決策<br>
+                <span class="text-gradient">釋放 10x 商業生產力</span>
+            </h1>
+            <p>
+                NexusAI 專為現代企業量身打造安全、高效且可微調的大語言模型與自主智慧代理平台，無縫連結內部數據與多工作流程。
+            </p>
+            <div class="hero-actions">
+                <a href="#demo" class="btn btn-primary">體驗 AI 代理演示</a>
+                <a href="#solutions" class="btn btn-secondary">瀏覽解決方案</a>
+            </div>
+        </section>
+
+        <!-- 數據統計 -->
+        <section class="stats-bar" id="stats">
+            <div class="stat-card">
+                <div class="stat-num">99.8%</div>
+                <div class="stat-label">RAG 專有知識檢索準確率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">10x</div>
+                <div class="stat-label">跨部門作業流自動化效率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">500+</div>
+                <div class="stat-label">全球信賴合作企業與機構</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">&lt; 150ms</div>
+                <div class="stat-label">超低延遲企業級推論響應</div>
+            </div>
+        </section>
+
+        <!-- 互動式演示區 -->
+        <section class="demo-section" id="demo">
+            <div class="section-header">
+                <h2>體驗 NexusAI 智慧代理</h2>
+                <p>點選下方預設場景，體驗企業級 AI Agent 如何自主推理與執行複雜任務：</p>
+            </div>
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <div class="dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="terminal-title">nexus-agent-runtime v3.4.0 [Active]</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="preset-prompts">
+                        <button class="prompt-chip" onclick="simulatePrompt('market')">📊 市場趨勢深度洞察</button>
+                        <button class="prompt-chip" onclick="simulatePrompt('contract')">⚖️ 供應商合約風險掃描</button>
+                        <button class="prompt-chip" onclick="simulatePrompt('code')">⚙️ 跨系統 API 整合規劃</button>
+                    </div>
+                    <div class="chat-display" id="agentOutput">正在等待指令... 請點選上方場景標籤啟動智慧代理。</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 核心功能區 -->
+        <section class="features" id="solutions">
+            <div class="section-header">
+                <h2>引領未來的全方位 AI 矩陣</h2>
+                <p>結合專利神經網絡架構與最高等級資料安全標準，全方位賦能您的業務。</p>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>自主協同 AI Agent</h3>
+                    <p>具備自主推理、目標拆解與跨工具鏈調用能力。從數據抓取、清洗分析到生成執行報告，實現端到端全流程無人化作業。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>企業知識庫 RAG 2.0</h3>
+                    <p>支援百萬級文檔混合向量檢索與知識圖譜關聯，根除模型幻覺，確保每一句商業決策回答皆有確切出處與依據。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>金融級安全與私有化部署</h3>
+                    <p>支援 VPC 私有雲與地端隔離部署。通過 SOC2 Type II 認證，提供端到端數據脫敏與不可逆傳輸加密，全面保障企業資產。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA 呼籲行動 -->
+        <section class="cta-section" id="contact">
+            <h2>加速啟動您的企業 AI 轉型</h2>
+            <p>與我們的 AI 解決方案架構師預約 30 分鐘技術諮詢，量身評估最適合您組織的智能化方案。</p>
+            <button class="btn btn-primary" style="font-size: 1.05rem; padding: 0.85rem 2.2rem;" onclick="alert('感謝您的諮詢！我們的顧問團隊將於 24 小時內與您聯繫。')">預約專屬 Demo 演示</button>
+        </section>
+    </main>
+
+    <!-- 頁尾 -->
+    <footer>
+        <div class="footer-container">
+            <div>
+                © 2026 NexusAI 智馭科技股份有限公司. 版權所有.
+            </div>
+            <div>
+                隱私權保護條款 ｜ 服務條款 ｜ 安全合規中心
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const responses = {
+            market: `[NexusAI Agent] 啟動市場情報模組...
+✔ 連線全球 42 個即時財經與產業研報資料庫
+✔ 正在比對近 90 天企業競爭者動態與社群聲量波動
+
+【分析結論】
+1. 生成式 AI 於製造業自動檢測應用滲透率成長 +142%
+2. 建議本季重點佈局邊緣運算 (Edge AI) 整合方案，預期可節省 38% 頻寬成本。`,
+
+            contract: `[NexusAI Agent] 載入法務審查合約引擎...
+✔ 掃描 38 頁合約條款與 SLA 附錄
+✔ 標記出 3 處潛在合規風險與責任上限模糊項
+
+【建議修正】
+• 第 14.2 條違約金倍率超出產業標準上限 (建議修訂為 1.5x 履約保證金)
+• 補足 GDPR 與在地數據出境的責任免責補充條款。`,
+
+            code: `[NexusAI Agent] 分析跨系統整合需求架構...
+✔ 檢測 ERP、CRM 與第三方金流 Webhook 規格
+✔ 自動生成 OpenAPI 3.0 規範與 TypeScript 類型定義
+
+【輸出結果】
+架構驗證通過，已為您生成 12 條非同步隊列 (Queue) 容錯策略與自動重試機制。`
+        };
+
+        function simulatePrompt(type) {
+            const output = document.getElementById('agentOutput');
+            output.innerText = "⏳ AI 代理正在推理規劃中，請稍候...";
+            
+            setTimeout(() => {
+                output.innerText = responses[type];
+            }, 300);
+        }
+    </script>
+</body>
+</html>

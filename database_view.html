@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQLite 資料庫檢視器 - 會員與購物系統</title>
+    <style>
+        *, ::before, ::after {
+            box-sizing: border-box;
+            border-width: 0;
+            border-style: solid;
+            border-color: #e2e8f0;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1.25rem;
+        }
+        .title-group h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .subtitle {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+        .badge-source {
+            display: inline-flex;
+            align-items: center;
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: monospace;
+        }
+        /* 數據卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: #ffffff;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+        }
+        .stat-title {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0f172a;
+            font-family: monospace;
+        }
+        /* 分頁標籤 */
+        .tabs-container {
+            background: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .tabs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 0.5rem 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .tabs-list {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.6rem 1.1rem;
+            font-size: 0.925rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            color: #0f172a;
+            background: #e2e8f0;
+        }
+        .tab-btn.active {
+            background: #3b82f6;
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        }
+        .search-box {
+            padding: 0.5rem 0.875rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            outline: none;
+            width: 260px;
+            background: #ffffff;
+        }
+        .search-box:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        /* 表格樣式 */
+        .table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+            padding: 0.875rem 1rem;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        td {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        /* 標籤 (Badge) */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+        .bg-emerald-100 { background-color: #d1fae5; }
+        .text-emerald-800 { color: #065f46; }
+        .border-emerald-300 { border-color: #6ee7b7; }
+        .bg-amber-100 { background-color: #fef3c7; }
+        .text-amber-800 { color: #92400e; }
+        .border-amber-300 { border-color: #fcd34d; }
+        .bg-rose-100 { background-color: #ffe4e6; }
+        .text-rose-800 { color: #9f1239; }
+        .border-rose-300 { border-color: #fda4af; }
+        .bg-slate-100 { background-color: #f1f5f9; }
+        .text-slate-700 { color: #334155; }
+        .border-slate-300 { border-color: #cbd5e1; }
+        /* 輔助樣式 */
+        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .font-medium { font-weight: 500; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-emerald-700 { color: #047857; }
+        .text-indigo-600 { color: #4f46e5; }
+        .text-slate-400 { color: #94a3b8; }
+        .text-slate-500 { color: #64748b; }
+        .text-slate-600 { color: #475569; }
+        .text-slate-900 { color: #0f172a; }
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .max-w-xs { max-width: 20rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 頂部標頭 -->
+        <header class="header">
+            <div class="title-group">
+                <h1>📦 SQLite 資料庫視覺化儀表板</h1>
+                <p class="subtitle">由 Python (sqlite3) 自動讀取資料庫結構與紀錄產出 • 更新時間：2026-09-05 14:52:29</p>
+            </div>
+            <div>
+                <span class="badge-source">資料庫：ecommerce.db</span>
+            </div>
+        </header>
+
+        <!-- 數據統計卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">👥 註冊會員總數 (users)</div>
+                <div class="stat-value">12 <span style="font-size: 0.9rem; color: #64748b; font-weight: normal;">人</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">📦 上架商品款數 (products)</div>
+                <div class="stat-value">14 <span style="font-size: 0.9rem; color: #64748b; font-weight: normal;">項</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">🛒 購買紀錄總筆數 (user_products)</div>
+                <div class="stat-value">30 <span style="font-size: 0.9rem; color: #64748b; font-weight: normal;">筆</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">💰 已完成成交總額</div>
+                <div class="stat-value" style="color: #047857;">NT$ 200,910</div>
+            </div>
+        </div>
+
+        <!-- 分頁切換區塊 -->
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <div class="tabs-list">
+                    <button class="tab-btn active" onclick="switchTab('user_products', this)">
+                        🛒 user_products 表 (30)
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('users', this)">
+                        👥 users 表 (12)
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('products', this)">
+                        📦 products 表 (14)
+                    </button>
+                </div>
+                <input type="text" id="searchInput" class="search-box" placeholder="🔍 快速篩選當前表格內容..." onkeyup="filterTable()">
+            </div>
+
+            <!-- Tab 1: user_products -->
+            <div id="tab-user_products" class="tab-panel active">
+                <div class="table-wrapper">
+                    <table id="table-user_products">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width: 60px;">ID</th>
+                                <th>購買會員 (user_id / 姓名 / Email)</th>
+                                <th>購買商品 (product_id / 名稱)</th>
+                                <th class="text-center">數量</th>
+                                <th class="text-right">成交單價</th>
+                                <th class="text-right">小計金額</th>
+                                <th class="text-center">訂單狀態</th>
+                                <th>購買時間 (purchased_at)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">1</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">陳雅婷 (Alice)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 1 | alice.chen@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">iPhone 16 Pro 256GB</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 1</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 36,900</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 36,900</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-01 10:30:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">2</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">陳雅婷 (Alice)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 1 | alice.chen@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">USB-C 編織快速充電線 2M</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 4</div>
+                </td>
+                <td class="font-mono text-center font-semibold">2</td>
+                <td class="font-mono text-right text-slate-600">NT$ 590</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,180</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-01 10:30:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">3</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">陳雅婷 (Alice)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 1 | alice.chen@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">AirPods Pro 2 (USB-C)</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 2</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 6,990</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 6,990</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-14 19:15:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">4</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">陳雅婷 (Alice)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 1 | alice.chen@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">雙層不銹鋼陶瓷易潔保溫杯 500ml</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 10</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 780</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 780</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-28 12:00:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">5</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">林志豪 (Bob)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 2 | bob.lin@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">極簡人體工學透氣網椅</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 5</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 8,990</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 8,990</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-10 14:20:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">6</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">林志豪 (Bob)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 2 | bob.lin@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">三模機械式 RGB 鍵盤 (茶軸)</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 7</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 3,280</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 3,280</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-10 14:20:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">7</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">林志豪 (Bob)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 2 | bob.lin@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">人體工學靜音垂直滑鼠</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 8</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 1,580</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,580</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-10 14:20:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">8</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">林志豪 (Bob)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 2 | bob.lin@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">27吋 4K HDR 專業設計螢幕</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 9</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 14,900</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 14,900</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-18 09:40:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">9</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">王大衛 (Charlie)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 3 | charlie.wang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">MacBook Air 15吋 M3</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 3</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 42,900</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 42,900</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-05 11:25:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">10</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">王大衛 (Charlie)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 3 | charlie.wang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">GaN 氮化鎵 65W 三孔快充頭</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 6</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 1,190</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,190</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-05 11:25:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">11</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">王大衛 (Charlie)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 3 | charlie.wang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">防潑水商務機能電腦後背包</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 14</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 2,180</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 2,180</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-05 11:25:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">12</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">郭家維 (David)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 4 | david.kuo@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">高階降噪耳罩式無線耳機</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 13</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 9,900</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 9,900</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-15 16:30:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">13</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">郭家維 (David)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 4 | david.kuo@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">精品中深焙濾掛咖啡組 (20入)</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 11</div>
+                </td>
+                <td class="font-mono text-center font-semibold">2</td>
+                <td class="font-mono text-right text-slate-600">NT$ 620</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,240</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-20 08:15:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">14</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">郭家維 (David)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 4 | david.kuo@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">USB-C 編織快速充電線 2M</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 4</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 590</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 590</td>
+                <td class="text-center"><span class="badge bg-rose-100 text-rose-800 border-rose-300">已退款 (refunded)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-22 17:00:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">15</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">黃羽萱 (Emily)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 5 | emily.huang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">雙層不銹鋼陶瓷易潔保溫杯 500ml</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 10</div>
+                </td>
+                <td class="font-mono text-center font-semibold">2</td>
+                <td class="font-mono text-right text-slate-600">NT$ 780</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,560</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-12 13:10:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">16</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">黃羽萱 (Emily)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 5 | emily.huang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">精品中深焙濾掛咖啡組 (20入)</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 11</div>
+                </td>
+                <td class="font-mono text-center font-semibold">3</td>
+                <td class="font-mono text-right text-slate-600">NT$ 600</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,800</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-12 13:10:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">17</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">黃羽萱 (Emily)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 5 | emily.huang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">日系抗藍光平光護眼鏡</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 12</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 1,280</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,280</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-01 20:45:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">18</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">劉柏翰 (Frank)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 6 | frank.liu@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">GaN 氮化鎵 65W 三孔快充頭</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 6</div>
+                </td>
+                <td class="font-mono text-center font-semibold">2</td>
+                <td class="font-mono text-right text-slate-600">NT$ 1,190</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 2,380</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-25 15:00:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">19</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">劉柏翰 (Frank)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 6 | frank.liu@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">USB-C 編織快速充電線 2M</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 4</div>
+                </td>
+                <td class="font-mono text-center font-semibold">3</td>
+                <td class="font-mono text-right text-slate-600">NT$ 590</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,770</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-25 15:00:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">20</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">張庭瑄 (Grace)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 7 | grace.chang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">AirPods Pro 2 (USB-C)</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 2</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 7,490</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 7,490</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-26 18:20:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">21</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">張庭瑄 (Grace)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 7 | grace.chang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">人體工學靜音垂直滑鼠</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 8</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 1,580</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,580</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-26 18:20:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">22</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">張庭瑄 (Grace)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 7 | grace.chang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">日系抗藍光平光護眼鏡</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 12</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 1,280</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,280</td>
+                <td class="text-center"><span class="badge bg-amber-100 text-amber-800 border-amber-300">處理中 (pending)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-05 09:10:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">23</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">吳冠宇 (Henry)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 8 | henry.wu@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">三模機械式 RGB 鍵盤 (茶軸)</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 7</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 3,280</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 3,280</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-01 10:05:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">24</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">吳冠宇 (Henry)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 8 | henry.wu@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">USB-C 編織快速充電線 2M</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 4</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 590</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 590</td>
+                <td class="text-center"><span class="badge bg-slate-100 text-slate-700 border-slate-300">已取消 (cancelled)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-02 11:30:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">25</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">楊佳蓉 (Iris)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 9 | iris.yang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">iPhone 16 Pro 256GB</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 1</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 36,900</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 36,900</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-02 14:00:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">26</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">楊佳蓉 (Iris)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 9 | iris.yang@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">AirPods Pro 2 (USB-C)</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 2</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 7,490</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 7,490</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-02 14:00:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">27</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">陳俊傑 (Jack)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 10 | jack.chen@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">防潑水商務機能電腦後背包</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 14</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 2,180</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 2,180</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-03 16:20:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">28</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">陳俊傑 (Jack)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 10 | jack.chen@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">GaN 氮化鎵 65W 三孔快充頭</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 6</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 1,190</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 1,190</td>
+                <td class="text-center"><span class="badge bg-emerald-100 text-emerald-800 border-emerald-300">已完成 (completed)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-03 16:20:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">29</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">賴曉玲 (Kelly)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 11 | kelly.lai@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">雙層不銹鋼陶瓷易潔保溫杯 500ml</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 10</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 780</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 780</td>
+                <td class="text-center"><span class="badge bg-amber-100 text-amber-800 border-amber-300">處理中 (pending)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-05 08:30:00</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center font-bold text-slate-700">30</td>
+                <td class="text-slate-900">
+                    <div class="font-medium">賴曉玲 (Kelly)</div>
+                    <div class="text-xs text-slate-400 font-mono">user_id: 11 | kelly.lai@example.com</div>
+                </td>
+                <td class="text-slate-900">
+                    <div class="font-medium">精品中深焙濾掛咖啡組 (20入)</div>
+                    <div class="text-xs text-slate-400 font-mono">product_id: 11</div>
+                </td>
+                <td class="font-mono text-center font-semibold">1</td>
+                <td class="font-mono text-right text-slate-600">NT$ 620</td>
+                <td class="font-mono text-right font-bold text-emerald-700">NT$ 620</td>
+                <td class="text-center"><span class="badge bg-amber-100 text-amber-800 border-amber-300">處理中 (pending)</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-05 08:30:00</td>
+            </tr>
+        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: users -->
+            <div id="tab-users" class="tab-panel">
+                <div class="table-wrapper">
+                    <table id="table-users">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width: 60px;">ID</th>
+                                <th>姓名 (name)</th>
+                                <th>電子郵件 (email)</th>
+                                <th>電話號碼 (phone)</th>
+                                <th>註冊時間 (created_at)</th>
+                                <th>最後更新 (updated_at)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+            <tr>
+                <td class="font-mono text-center">1</td>
+                <td class="font-medium text-slate-900">陳雅婷 (Alice)</td>
+                <td class="text-indigo-600">alice.chen@example.com</td>
+                <td class="font-mono text-slate-600">0912-345-678</td>
+                <td class="text-xs text-slate-500 font-mono">2026-01-10 09:20:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">2</td>
+                <td class="font-medium text-slate-900">林志豪 (Bob)</td>
+                <td class="text-indigo-600">bob.lin@example.com</td>
+                <td class="font-mono text-slate-600">0923-456-789</td>
+                <td class="text-xs text-slate-500 font-mono">2026-01-15 14:11:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">3</td>
+                <td class="font-medium text-slate-900">王大衛 (Charlie)</td>
+                <td class="text-indigo-600">charlie.wang@example.com</td>
+                <td class="font-mono text-slate-600">0934-567-890</td>
+                <td class="text-xs text-slate-500 font-mono">2026-01-22 18:30:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">4</td>
+                <td class="font-medium text-slate-900">郭家維 (David)</td>
+                <td class="text-indigo-600">david.kuo@example.com</td>
+                <td class="font-mono text-slate-600">0955-123-456</td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-01 11:05:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">5</td>
+                <td class="font-medium text-slate-900">黃羽萱 (Emily)</td>
+                <td class="text-indigo-600">emily.huang@example.com</td>
+                <td class="font-mono text-slate-600">0966-234-567</td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-05 16:42:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">6</td>
+                <td class="font-medium text-slate-900">劉柏翰 (Frank)</td>
+                <td class="text-indigo-600">frank.liu@example.com</td>
+                <td class="font-mono text-slate-600">0977-345-678</td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-12 10:15:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">7</td>
+                <td class="font-medium text-slate-900">張庭瑄 (Grace)</td>
+                <td class="text-indigo-600">grace.chang@example.com</td>
+                <td class="font-mono text-slate-600">0988-456-789</td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-18 20:01:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">8</td>
+                <td class="font-medium text-slate-900">吳冠宇 (Henry)</td>
+                <td class="text-indigo-600">henry.wu@example.com</td>
+                <td class="font-mono text-slate-600">0910-567-890</td>
+                <td class="text-xs text-slate-500 font-mono">2026-02-25 13:50:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">9</td>
+                <td class="font-medium text-slate-900">楊佳蓉 (Iris)</td>
+                <td class="text-indigo-600">iris.yang@example.com</td>
+                <td class="font-mono text-slate-600">0920-678-901</td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-01 08:33:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">10</td>
+                <td class="font-medium text-slate-900">陳俊傑 (Jack)</td>
+                <td class="text-indigo-600">jack.chen@example.com</td>
+                <td class="font-mono text-slate-600">0930-789-012</td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-02 12:20:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">11</td>
+                <td class="font-medium text-slate-900">賴曉玲 (Kelly)</td>
+                <td class="text-indigo-600">kelly.lai@example.com</td>
+                <td class="font-mono text-slate-600">0940-890-123</td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-03 17:45:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">12</td>
+                <td class="font-medium text-slate-900">蔡宗翰 (Leo)</td>
+                <td class="text-indigo-600">leo.tsai@example.com</td>
+                <td class="font-mono text-slate-600">0950-901-234</td>
+                <td class="text-xs text-slate-500 font-mono">2026-03-04 19:10:00</td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 3: products -->
+            <div id="tab-products" class="tab-panel">
+                <div class="table-wrapper">
+                    <table id="table-products">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width: 60px;">ID</th>
+                                <th>商品名稱 (product_name)</th>
+                                <th>當前單價 (price)</th>
+                                <th>商品簡述 (description)</th>
+                                <th class="text-center">庫存數量 (stock)</th>
+                                <th>上架時間 (created_at)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+            <tr>
+                <td class="font-mono text-center">1</td>
+                <td class="font-medium text-slate-900">iPhone 16 Pro 256GB</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 36,900</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="Apple 原廠旗艦機，鈦金屬邊框與 48MP 鏡頭">Apple 原廠旗艦機，鈦金屬邊框與 48MP 鏡頭</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">15 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">2</td>
+                <td class="font-medium text-slate-900">AirPods Pro 2 (USB-C)</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 7,490</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="主動降噪耳機，適應性音訊與長效續航">主動降噪耳機，適應性音訊與長效續航</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">40 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">3</td>
+                <td class="font-medium text-slate-900">MacBook Air 15吋 M3</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 42,900</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="極致輕薄筆電，16GB 統一記憶體 / 512GB SSD">極致輕薄筆電，16GB 統一記憶體 / 512GB SSD</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-red-100 text-red-700">10 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">4</td>
+                <td class="font-medium text-slate-900">USB-C 編織快速充電線 2M</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 590</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="最高支援 100W PD 快充，耐折抗磨損">最高支援 100W PD 快充，耐折抗磨損</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">120 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">5</td>
+                <td class="font-medium text-slate-900">極簡人體工學透氣網椅</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 8,990</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="全椅透氣網布，四段自適應腰靠支撐">全椅透氣網布，四段自適應腰靠支撐</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-red-100 text-red-700">8 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">6</td>
+                <td class="font-medium text-slate-900">GaN 氮化鎵 65W 三孔快充頭</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 1,190</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="支援 2C1A 同時輸出，體積小巧好攜帶">支援 2C1A 同時輸出，體積小巧好攜帶</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">75 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">7</td>
+                <td class="font-medium text-slate-900">三模機械式 RGB 鍵盤 (茶軸)</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 3,280</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="支援藍牙/2.4G/有線三模，PBT 熱昇華鍵帽">支援藍牙/2.4G/有線三模，PBT 熱昇華鍵帽</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">25 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">8</td>
+                <td class="font-medium text-slate-900">人體工學靜音垂直滑鼠</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 1,580</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="57度握角減輕手腕負擔，支援跨裝置切換">57度握角減輕手腕負擔，支援跨裝置切換</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">35 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">9</td>
+                <td class="font-medium text-slate-900">27吋 4K HDR 專業設計螢幕</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 14,900</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="IPS面板 99% sRGB，支援 USB-C 90W 反向供電">IPS面板 99% sRGB，支援 USB-C 90W 反向供電</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-red-100 text-red-700">6 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">10</td>
+                <td class="font-medium text-slate-900">雙層不銹鋼陶瓷易潔保溫杯 500ml</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 780</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="內膽陶瓷易潔層，不卡咖啡與茶垢">內膽陶瓷易潔層，不卡咖啡與茶垢</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">50 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">11</td>
+                <td class="font-medium text-slate-900">精品中深焙濾掛咖啡組 (20入)</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 620</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="帶有黑巧克力與堅果香氣，手工挑豆烘焙">帶有黑巧克力與堅果香氣，手工挑豆烘焙</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">60 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">12</td>
+                <td class="font-medium text-slate-900">日系抗藍光平光護眼鏡</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 1,280</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="超輕鈦金屬鏡架，有效濾除40%有害藍光">超輕鈦金屬鏡架，有效濾除40%有害藍光</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">30 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">13</td>
+                <td class="font-medium text-slate-900">高階降噪耳罩式無線耳機</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 9,900</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="業界頂級主動降噪，30小時超長續航力">業界頂級主動降噪，30小時超長續航力</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">12 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+
+            <tr>
+                <td class="font-mono text-center">14</td>
+                <td class="font-medium text-slate-900">防潑水商務機能電腦後背包</td>
+                <td class="font-mono font-semibold text-emerald-700">NT$ 2,180</td>
+                <td class="text-slate-600 text-sm max-w-xs truncate" title="可容納 16 吋筆電，具備獨立乾濕分離層">可容納 16 吋筆電，具備獨立乾濕分離層</td>
+                <td class="text-center"><span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">28 件</span></td>
+                <td class="text-xs text-slate-500 font-mono">2026-09-05 06:36:12</td>
+            </tr>
+        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Generated by Python SQLite Exporter • 單一獨立 HTML 檔案，可直接雙擊在任何瀏覽器開啟</p>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName, btn) {
+            // 隱藏所有分頁
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            // 移除所有按鈕 active 樣式
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            // 顯示目標分頁與樣式
+            document.getElementById('tab-' + tabName).classList.add('active');
+            btn.classList.add('active');
+
+            // 切換時重新觸發搜尋篩選
+            filterTable();
+        }
+
+        function filterTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const activePanel = document.querySelector('.tab-panel.active');
+            if (!activePanel) return;
+
+            const rows = activePanel.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
